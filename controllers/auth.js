@@ -1,7 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-exports.register = async (req, res) => {
+const register = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
@@ -15,13 +16,13 @@ exports.register = async (req, res) => {
     });
 
     const newUser = await user.save();
-    res.status(200).json(newUser);
+    res.status(200).json("New user is created");
   } catch (error) {
     res.status(500).json(error);
   }
 };
 
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   const { username, email, password } = req.body;
   try {
     const user = await User.findOne({
@@ -29,11 +30,21 @@ exports.login = async (req, res) => {
     });
     !user && res.status(404).json("User not found");
 
-    const comparePassword = bcrypt.compare(password, user.password);
+    const comparePassword = bcrypt.compare(req.body.password, user.password);
     !comparePassword && res.status(401).json("Wrong password");
 
-    res.status(200).json(user);
+    res.status(200).json({
+      token: jwt.sign({ userId: user._id }, process.env.Secure_Token, {
+        expiresIn: "7d",
+      }),
+      userId: user._id,
+    });
   } catch (error) {
-    res.status(500).json(error);
+    res.status(500).json({ error });
   }
+};
+
+module.exports = {
+  register,
+  login,
 };
