@@ -7,38 +7,49 @@ const register = async (req, res) => {
 
   try {
     const salt = await bcrypt.genSalt(10);
-    const hashPassword = await bcrypt.hash(password, salt);
-
-    const user = new User({
-      username: username,
-      email: email,
-      password: hashPassword,
+    await bcrypt.hash(password, salt).then((hash) => {
+      const user = new User({
+        username: username,
+        email: email,
+        password: hash,
+      });
+      user
+        .save()
+        .then(() => res.status(200).json("New user is created"))
+        .catch((error) => {
+          res.status(500).json(error);
+        });
     });
-
-    const newUser = await user.save();
-    res.status(200).json("New user is created");
   } catch (error) {
     res.status(500).json(error);
   }
 };
 
 const login = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email } = req.body;
   try {
     const user = await User.findOne({
       $or: [{ email: email }, { username: username }],
     });
-    !user && res.status(404).json("User not found");
 
-    const comparePassword = bcrypt.compare(req.body.password, user.password);
-    !comparePassword && res.status(401).json("Wrong password");
+    if (!user) res.status(404).json("User not found");
 
-    res.status(200).json({
-      token: jwt.sign({ userId: user._id }, process.env.Secure_Token, {
-        expiresIn: "7d",
-      }),
-      userId: user._id,
-    });
+    bcrypt
+      .compare(req.body.password, user.password)
+      .then((valid) => {
+        if (!valid) res.status(401).json("Wrong password");
+
+        const { _id, password, ...data } = user._doc;
+
+        res.status(200).json({
+          token: jwt.sign({ userId: user._id }, process.env.Secure_Token, {
+            expiresIn: "7d",
+          }),
+          userId: user._id,
+          data: data,
+        });
+      })
+      .catch((error) => res.status(500).json({ message: error + "" }));
   } catch (error) {
     res.status(500).json({ error });
   }

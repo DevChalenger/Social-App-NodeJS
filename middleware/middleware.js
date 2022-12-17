@@ -1,41 +1,18 @@
 const jwt = require("jsonwebtoken");
 
-const verifyToken = (req, res, next) => {
-  const authHeader = req.header.token;
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
-    jwt.verify(token, process.env.Secure_Token, (error, user) => {
-      if (error) res.status(403).json("Token is not valid");
-      req.user = user;
+module.exports = (req, res, next) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token, process.env.Secure_Token);
+    const userId = decodedToken.userId;
+    if (req.body.userId && req.body.userId !== userId) {
+      throw "Invalid user ID";
+    } else {
       next();
+    }
+  } catch {
+    res.status(401).json({
+      error: new Error("Invalid request!"),
     });
-  } else {
-    return res.send(401).json("You are not authenticated");
   }
-};
-
-const verifyAuth = (req, res, next) => {
-  verifyToken(req, res, () => {
-    if (req.user.id === req.params.id || req.user.isAdmin) {
-      next();
-    } else {
-      res.status(403).json("You are not authorized");
-    }
-  });
-};
-
-const verifyAdmin = (req, res, next) => {
-  verifyToken(req, res, () => {
-    if (req.user.isAdmin) {
-      next();
-    } else {
-      res.status(403).json("You are not authorized");
-    }
-  });
-};
-
-module.exports = {
-  verifyToken,
-  verifyAuth,
-  verifyAdmin,
 };

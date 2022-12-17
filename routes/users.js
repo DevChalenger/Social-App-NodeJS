@@ -1,11 +1,8 @@
 const router = require("express").Router();
-const { updateUser } = require("../controllers/users");
-const {
-  verifyToken,
-  verifyAuth,
-  verifyAdmin,
-} = require("../middleware/middleware");
+const { updateUser, deleteUser } = require("../controllers/users");
+const auth = require("../middleware/middleware");
 
-router.put("/:id", verifyAuth, updateUser);
+router.put("/:id", auth, updateUser);
+router.delete("/:id", auth, deleteUser);
 
 module.exports = router;

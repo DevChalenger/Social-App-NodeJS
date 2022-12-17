@@ -9,6 +9,7 @@ const cors = require("cors");
 // Routes
 const usersRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
+const postsRoutes = require("./routes/posts");
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use(morgan("common"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", usersRoutes);
+app.use("/api/post", postsRoutes);
 
 app.listen(8800, () => {
   console.log(`Backend server running on port ${process.env.PORT}`);

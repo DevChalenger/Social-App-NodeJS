@@ -2,7 +2,7 @@ const User = require("../models/User");
 
 const updateUser = async (req, res) => {
   try {
-    const update = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       req.params.id,
       {
         $set: req.body,
@@ -11,15 +11,20 @@ const updateUser = async (req, res) => {
         new: true,
       }
     );
-    res.status(201).json(update);
+    res.status(201).json("Post is updated");
   } catch (error) {
     res.status(500).json(error);
   }
 };
 
-const getUser = async (req, res) => {};
-
-const deleteUser = async (req, res) => {};
+const deleteUser = async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.status(201).json("User is deleted");
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 
 module.exports = {
   updateUser,
