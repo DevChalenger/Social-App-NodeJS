@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const token = require("../utils/jwt.verif");
 
 const register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -54,14 +55,12 @@ const login = async (req, res) => {
 
 const profile = async (req, res) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
-    const decodedToken = jwt.verify(token, process.env.Secure_Token);
-    const userId = decodedToken.userId;
-    await User.findOne({ _id: userId }).then((user) => {
+    await User.findOne({ _id: token(req) }).then((user) => {
+      console.log(user._id);
       if (!user) {
         res.status(404).json("User not found!");
       }
-      const { password, ...data } = user._doc;
+      const { password, _id, ...data } = user._doc;
 
       res.status(200).json(data);
     });
