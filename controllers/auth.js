@@ -40,14 +40,10 @@ const login = async (req, res) => {
       .then((valid) => {
         if (!valid) res.status(401).json("Wrong password");
 
-        const { _id, password, ...data } = user._doc;
-
         res.status(200).json({
           token: jwt.sign({ userId: user._id }, process.env.Secure_Token, {
-            expiresIn: "7d",
+            expiresIn: "1d",
           }),
-          userId: user._id,
-          data: data,
         });
       })
       .catch((error) => res.status(500).json({ message: error + "" }));
@@ -56,7 +52,26 @@ const login = async (req, res) => {
   }
 };
 
+const profile = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token, process.env.Secure_Token);
+    const userId = decodedToken.userId;
+    await User.findOne({ _id: userId }).then((user) => {
+      if (!user) {
+        res.status(404).json("User not found!");
+      }
+      const { password, ...data } = user._doc;
+
+      res.status(200).json(data);
+    });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
 module.exports = {
   register,
   login,
+  profile,
 };
