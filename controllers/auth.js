@@ -5,9 +5,14 @@ const token = require("../utils/jwt.verif");
 
 const register = async (req, res) => {
   const { username, email, password } = req.body;
-
+  const salt = await bcrypt.genSalt(10);
+  const user = await User.findOne({
+    $or: [{ email: email }, { username: username }],
+  });
+  /* if (user.email === email) {
+    res.status(403).json("email already registred");
+   */
   try {
-    const salt = await bcrypt.genSalt(10);
     await bcrypt.hash(password, salt).then((hash) => {
       const user = new User({
         username: username,
